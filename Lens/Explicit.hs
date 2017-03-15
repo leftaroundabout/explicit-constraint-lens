@@ -61,3 +61,18 @@ instance ÆSet Lense where
 -- lens g s = Optic $ \(Lenss gs ss) -> Lenss _ _
 
 
+--  I S O S
+
+class ÆLens c => ÆIso c where
+  from :: Optic' (Light c a s) a s -> Optic' (Light c s a) s a
+
+data Ise
+
+instance Æther Ise where
+  data Light Ise a s α あ = Iss { isoGets :: α -> a, isoSets :: s -> あ }
+instance ÆGet Ise where
+  (^.) (Optic f) = isoGets . f $ Iss id undefined
+instance ÆSet Ise where
+  (%~) (Optic f) s = isoSets . f $ Iss id _
+-- class ÆIso Ise where
+--   from
