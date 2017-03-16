@@ -16,12 +16,13 @@
 {-# LANGUAGE GADTs                        #-}
 {-# LANGUAGE UnicodeSyntax                #-}
 {-# LANGUAGE Rank2Types                   #-}
+{-# LANGUAGE DeriveFunctor                #-}
 
 module Lens.Explicit where
     
 import Prelude hiding (id, (.))
 import Control.Category
-import Data.Void
+import qualified Data.Foldable as Foldable
 
 newtype Accessor x y = Accessor { runAccessor :: x -> y }
   deriving (Category)
@@ -109,6 +110,37 @@ disassemblePrism (Accessor f)
 
 --  T R A V E R S A L S
 
+class (FromLens c, FromPrism c) => FromTraversal c where
+  traversed :: Traversable f => Optic c (f a) (f b) a b
+
+type Traversal s t a b = ∀ c . FromTraversal c => Optic c s t a b
+
+newtype TraversalTrait m s t a b α β σ τ = TraversalTrait (α -> m β)
+
+instance Functor m => FromIso (TraversalTrait m) where
+  iso g f = Accessor $ \(TraversalTrait q) -> TraversalTrait $ fmap f . q . g
+instance Functor m => FromLens (TraversalTrait m) where
+  lens g f = Accessor $ \(TraversalTrait q) -> TraversalTrait $ \s -> fmap (f s) . q $ g s
+instance Applicative m => FromPrism (TraversalTrait m) where
+  prism f g = Accessor $ \(TraversalTrait q) -> TraversalTrait $ \s -> case g s of
+                                                     Left t -> pure t
+                                                     Right a -> fmap f $ q a
+instance Applicative m => FromTraversal (TraversalTrait m) where
+  traversed = Accessor $ \(TraversalTrait q)
+                -> TraversalTrait $ traverse q
+
+type ATraversal m s t a b = Optic (TraversalTrait m) s t a b
+
+data StateL s x = StateL (s -> (s,x)) deriving (Functor)
+instance Applicative (StateL s) where
+  pure = StateL . flip (,)
+  StateL f<*>StateL g = StateL $ \s -> let (s',μ) = f s in fmap μ $ g s'
+
+mapAccumLOf :: ATraversal (StateL acc) s t a b
+                   -> (acc -> a -> (acc,b)) -> acc -> s -> (acc,t)
+mapAccumLOf (Accessor y) f = case y . TraversalTrait $ StateL . flip f of
+                               TraversalTrait w -> \acc s -> case w s of
+                                        StateL p -> p acc
 
 --  G E T T E R S
 
@@ -133,12 +165,51 @@ infixl 8 ^.
 (^.) :: s -> AGetter s a -> a
 s ^. Accessor f = case f $ GetterTrait s of GetterTrait a -> a
 
-foldMapOf :: Optic GetterTrait s s a a -> (a -> b) -> s -> b
-foldMapOf a g s = g $ s^.a
+--  F O L D S
+
+class FromGetter c => FromFold c where
+  folded :: Foldable f => Optic c (f a) t a b
+
+type Fold s t a b = ∀ c . FromFold c => Optic c s t a b
+
+newtype FoldlTrait s t a b α β σ τ = FoldlTrait (b -> α -> b)
+
+instance FromIso FoldlTrait where
+  iso g _ = to g
+instance FromLens FoldlTrait where
+  lens g _ = to g
+instance FromGetter FoldlTrait where
+  to g = Accessor $ \(FoldlTrait q) -> FoldlTrait $ \b -> q b . g
+instance FromFold FoldlTrait where
+  folded = Accessor $ \(FoldlTrait q) -> FoldlTrait $ Foldable.foldl' q
+
+type AFoldl s t a b = Optic FoldlTrait s t a b
+
+foldlOf :: AFoldl s t a b -> (b -> a -> b) -> b -> s -> b
+foldlOf (Accessor f) y = case f $ FoldlTrait y of FoldlTrait w -> w
+
+newtype FoldrTrait s t a b α β σ τ = FoldrTrait (α -> b -> b)
+
+instance FromIso FoldrTrait where
+  iso g _ = to g
+instance FromLens FoldrTrait where
+  lens g _ = to g
+instance FromGetter FoldrTrait where
+  to g = Accessor $ \(FoldrTrait q) -> FoldrTrait $ q . g
+instance FromFold FoldrTrait where
+  folded = Accessor $ \(FoldrTrait q) -> FoldrTrait . flip $ Foldable.foldr q
+
+type AFoldr s t a b = Optic FoldrTrait s t a b
+
+foldrOf :: AFoldr s t a b -> (a -> b -> b) -> b -> s -> b
+foldrOf (Accessor f) y = case f $ FoldrTrait y of FoldrTrait w -> flip w
+
+foldMapOf :: Monoid b => AFoldr s t a b -> (a -> b) -> s -> b
+foldMapOf f g = foldrOf f (mappend . g) mempty
 
 --  S E T T E R S
 
-class (FromLens c, FromPrism c) => FromSetter c where
+class FromTraversal c => FromSetter c where
   sets :: ((a -> b) -> s -> t) -> Optic c s t a b
 
 type Setter s t a b = ∀ c . FromSetter c => Optic c s t a b
@@ -153,6 +224,8 @@ instance FromPrism SetterTrait where
   prism g f = Accessor $ \(SetterTrait q) -> SetterTrait $ \s ->
                  case f s of Left t -> t
                              Right a -> g $ q a
+instance FromTraversal SetterTrait where
+  traversed = Accessor $ \(SetterTrait q) -> SetterTrait $ fmap q
 instance FromSetter SetterTrait where
   sets f = Accessor $ \(SetterTrait q) -> SetterTrait $ f q
 
