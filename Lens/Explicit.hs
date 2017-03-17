@@ -23,6 +23,8 @@ import Prelude hiding (id, (.))
 import Control.Category
 import qualified Data.Foldable as Foldable
 
+import Control.Applicative
+
 newtype Accessor x y = Accessor { runAccessor :: x -> y }
   deriving (Category)
 
@@ -125,11 +127,28 @@ instance FromPrism TraversalTrait where
                                                      Left t -> t
                                                      Right a -> q (h . f) a
 
-freeVersing :: ((b->[b]->mt) -> a -> mt -> [a] -> mt)
-                                -> (([a] -> mt) -> [b] -> mt)
-                                -> ([b] -> mt) -> [a] -> mt
-freeVersing q e h [] = e (const $ h []) []
-freeVersing q e h (x:xs) = q (\y -> h . (y:)) x (freeVersing q e h xs) xs
+
+class Foldable f => ParaFoldable f where
+  paraFoldr :: (a -> f a -> b -> b) -> b -> f a -> b
+
+class (Traversable f, ParaFoldable f) => ParaTraversable f where
+  paraTraverse :: Applicative m => (a -> f a -> m b) -> f a -> m (f b)
+
+instance ParaFoldable [] where
+  paraFoldr _ i [] = i
+  paraFoldr f i (x:xs) = f x xs $ paraFoldr f i xs
+
+instance ParaTraversable [] where
+  paraTraverse _ [] = pure []
+  paraTraverse f (x:xs) = (:) <$> f x xs <*> paraTraverse f xs
+
+freeVersing :: (ParaFoldable t, Alternative t)
+                    => ((b->t b->mt) -> a -> mt -> t a -> mt)
+                                -> ((t a -> mt) -> t b -> mt)
+                                -> (t b -> mt) -> t a -> mt
+freeVersing q e h = paraFoldr
+           (\x xs ys -> q (\y -> h . (pure y<|>)) x ys xs)
+           (e (const $ h empty) empty)
                 
 
 instance FromTraversal TraversalTrait where
