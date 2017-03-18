@@ -112,60 +112,53 @@ disassemblePrism (Accessor f)
 --  T R A V E R S A L S
 
 class (FromLens c, FromPrism c) => FromTraversal c where
-  traversed :: Optic c ([b] -> mt) ([a] -> mt) (a, mt) b
+  traversed :: Optic c [a] (m [b]) (Maybe (b, [b]) -> [b]) (Maybe (a, m [b]) -> m [b])
 
 type Traversal s t a b = ∀ c . FromTraversal c => Optic c s t a b
 
-newtype TraversalTrait s t a b α β σ τ = TraversalTrait ((β -> s) -> α -> t)
+newtype TraversalTrait s t a b α β σ τ = TraversalTrait ((b -> s) -> α -> t)
+        -- ATraversal s t a b ~ ((b -> s) -> a -> t) -> ((t -> s) -> s -> t)
+        -- ATraversal s (m t) (Maybe (a, m t) -> m t) (Maybe (b, t) -> t)
+        --                    ~ (((b,t) -> t) -> (a, m t) -> s -> t)
+        --                       -> ((b,t) -> t) -> t -> s -> m t
 
 instance FromIso TraversalTrait where
-  iso g f = Accessor $ \(TraversalTrait q) -> TraversalTrait $ \h -> q (h . f) . g
+  iso g _ = Accessor $ \(TraversalTrait q) -> TraversalTrait $ \h -> q h . g
 instance FromLens TraversalTrait where
-  lens g f = Accessor $ \(TraversalTrait q) -> TraversalTrait $ \h s -> q (h . f s) (g s)
+  lens g _ = Accessor $ \(TraversalTrait q) -> TraversalTrait $ \h -> q h . g
 instance FromPrism TraversalTrait where
   prism f g = Accessor $ \(TraversalTrait q) -> TraversalTrait $ \h s -> case g s of
                                                      Left t -> t
-                                                     Right a -> q (h . f) a
+                                                     Right a -> q h a
 
-
-class Foldable f => ParaFoldable f where
-  paraFoldr :: (a -> f a -> b -> b) -> b -> f a -> b
-
-class (Traversable f, ParaFoldable f) => ParaTraversable f where
-  paraTraverse :: Applicative m => (a -> f a -> m b) -> f a -> m (f b)
-
-instance ParaFoldable [] where
-  paraFoldr _ i [] = i
-  paraFoldr f i (x:xs) = f x xs $ paraFoldr f i xs
-
-instance ParaTraversable [] where
-  paraTraverse _ [] = pure []
-  paraTraverse f (x:xs) = (:) <$> f x xs <*> paraTraverse f xs
-
-freeVersing :: (ParaFoldable t, Alternative t)
-                    => ((b->t b->mt) -> a -> mt -> t a -> mt)
-                                -> ((t a -> mt) -> t b -> mt)
-                                -> (t b -> mt) -> t a -> mt
-freeVersing q e h = paraFoldr
-           (\x xs ys -> q (\y -> h . (pure y<|>)) x ys xs)
-           (e (const $ h empty) empty)
-                
 
 instance FromTraversal TraversalTrait where
-  traversed = Accessor $ \(TraversalTrait q) -> TraversalTrait . freeVersing $ curry . q
+--  traversed = Accessor $ \(TraversalTrait q) -> TraversalTrait . undefined $ curry . q
 
 type ATraversal s t a b = Optic TraversalTrait s t a b
 
-traverseOf :: Monad m => ATraversal (t -> m t) (s -> m t) (a, m t) b
-                                 -> (a -> m b) -> s -> m t
-traverseOf (Accessor y) f = case y . TraversalTrait $
-                                \c (a,p) _ -> p >>= \t -> f a >>= \b -> c b t of
-                            TraversalTrait w -> w (const pure) pure
 
 -- mapAccumLOf :: ATraversal s (acc -> (acc,t)) (acc -> (acc,t->t)) b
 --                    -> (acc -> a -> (acc,b)) -> acc -> s -> (acc,t)
 -- mapAccumLOf (Accessor y) f = case y . TraversalTrait $ \α θ ζ -> _ of
 --                                TraversalTrait w -> _
+class Foldable f => ParaFoldable f where
+  paraFoldr :: (a -> f a -> b -> b) -> b -> f a -> b
+class (Traversable f, ParaFoldable f) => ParaTraversable f where
+  paraTraverse :: Applicative m => (a -> f a -> m b) -> f a -> m (f b)
+instance ParaFoldable [] where
+  paraFoldr _ i [] = i
+  paraFoldr f i (x:xs) = f x xs $ paraFoldr f i xs
+instance ParaTraversable [] where
+  paraTraverse _ [] = pure []
+  paraTraverse f (x:xs) = (:) <$> f x xs <*> paraTraverse f xs
+freeVersing :: ((Maybe (b,[b]) -> [b]) -> Maybe (a,m [b]) -> m [b])
+                  -> [a] -> m [b]
+freeVersing q = foldr (\x o -> q c $ Just (x, o)) (q c Nothing)
+ where c Nothing = []
+       c (Just (y,ys)) = y : ys
+                
+
 
 --  G E T T E R S
 
@@ -250,7 +243,8 @@ instance FromPrism SetterTrait where
                  case f s of Left t -> t
                              Right a -> g $ q a
 instance FromTraversal SetterTrait where
-  -- traversed = Accessor $ \(SetterTrait q) -> SetterTrait $ pure . q
+  traversed = Accessor $ \(SetterTrait q)
+            -> SetterTrait $ freeVersing q
 instance FromSetter SetterTrait where
   sets f = Accessor $ \(SetterTrait q) -> SetterTrait $ f q
 
