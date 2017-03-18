@@ -185,8 +185,8 @@ instance FromFold FoldlTrait where
 
 type AFoldl s t a b = Optic FoldlTrait s t a b
 
-foldlOf :: AFoldl s t a b -> (b -> a -> b) -> b -> s -> b
-foldlOf (Accessor f) y = case f $ FoldlTrait y of FoldlTrait w -> w
+foldl'Of :: AFoldl s t a b -> (b -> a -> b) -> b -> s -> b
+foldl'Of (Accessor f) y = case f $ FoldlTrait y of FoldlTrait w -> w
 
 newtype FoldrTrait s t a b α β σ τ = FoldrTrait (α -> b -> b)
 
