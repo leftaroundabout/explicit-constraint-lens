@@ -37,15 +37,18 @@ class FromIso c where
 
 type Iso s t a b = ∀ c . FromIso c => Optic c s t a b
 
-newtype IsoTrait s t a b α β σ τ = IsoTrait (τ -> σ)
+data IsoTrait s t a b α β σ τ = IsoTrait (α -> a) (τ -> t)
 
 instance FromIso IsoTrait where
-  iso g f = Accessor $ \(IsoTrait q) -> IsoTrait $ g . q . f 
+  iso g f = Accessor $ \(IsoTrait p q) -> IsoTrait (p . g) (q . f)
 
 type AnIso s t a b = Optic IsoTrait s t a b
 
 under :: AnIso s t a b -> (t -> s) -> b -> a
-under (Accessor f) g = case f $ IsoTrait g of IsoTrait q -> q
+under (Accessor f) g = case f $ IsoTrait id id of IsoTrait p q -> p . g . q
+
+from :: AnIso s t a b -> Iso b a t s
+from (Accessor i) = case i $ IsoTrait id id of IsoTrait d b -> iso b d
 
 --  L E N S E S
 
