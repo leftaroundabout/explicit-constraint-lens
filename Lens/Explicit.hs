@@ -142,6 +142,10 @@ mapAccumLOf (Accessor y) f = case y . TraversalTrait $ StateL . flip f of
                                TraversalTrait w -> \acc s -> case w s of
                                         StateL p -> p acc
 
+traverseOf :: ATraversal f s t a b -> (a -> f b) -> s -> f t
+traverseOf (Accessor y) f = case y $ TraversalTrait f of
+                               TraversalTrait w -> w
+
 --  G E T T E R S
 
 class FromLens c => FromGetter c where
