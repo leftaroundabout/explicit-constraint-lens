@@ -8,6 +8,8 @@
 -- Portability : portable
 -- 
 
+{-# LANGUAGE LambdaCase    #-}
+
 module Main where
 
 import Lens.Explicit
@@ -55,6 +57,24 @@ foobar = Bar foo False
 negated :: Iso' Int Int
 negated = iso negate negate
 
+data Zab f = Fab f Bool
+           | Fob String Int
+       deriving (Eq,Show)
+
+_Fab :: Prism (Zab f) (Zab g) (Bar f) (Bar g)
+_Fab = prism (\(Bar ζ δ) -> Fab ζ δ)
+             (\case
+               Fab ζ δ -> Right $ Bar ζ δ
+               Fob β α -> Left $ Fob β α )
+
+_Fob :: Prism' (Zab f) Foo
+_Fob = prism (\(Foo α β) -> Fob β α)
+             (\case
+               Fab ζ δ -> Left $ Fab ζ δ
+               Fob β α -> Right $ Foo α β )
+
+
+
 tests :: TestTree
 tests = testGroup "Tests"
   [ testGroup "Getting"
@@ -65,6 +85,8 @@ tests = testGroup "Tests"
      , testCase "Nested c.a" $ foobar^.c.a @?= 700
      , testCase "Nested d.id" $ foobar^.d.id @?= False
      , testCase "Composed a.negated" $ foo^.a.negated @?= -700
+     , testCase "Reviewing _Fab" $ bar^.re _Fab @?= Fab pi True
+     , testCase "Reviewing _Fob" $ foo^.re _Fob @?= (Fob "foo" 700 :: Zab ())
      ]
   , testGroup "Setting"
      [ testCase "Monomorphic a"
