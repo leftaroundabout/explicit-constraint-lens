@@ -82,7 +82,8 @@ foofob = Fob "foo" 700
 tests :: TestTree
 tests = testGroup "Tests"
   [ testGroup "Getting"
-     [ testCase "Monomorphic a" $ foo^.a @?= 700
+     [ testCase "Identity" $ 37^.id @?= 37
+     , testCase "Monomorphic a" $ foo^.a @?= 700
      , testCase "Monomorphic b" $ foo^.b @?= "foo"
      , testCase "Polymorphic c" $ bar^.c @?= pi
      , testCase "Monomorphic d" $ bar^.d @?= True
@@ -93,7 +94,9 @@ tests = testGroup "Tests"
      , testCase "Reviewing _Fob" $ foo^.re _Fob @?= foofob
      ]
   , testGroup "Setting"
-     [ testCase "Monomorphic a"
+     [ testCase "Identity"
+          $ (37 & id.~57) @?= 57
+     , testCase "Monomorphic a"
           $ (foo & a.~900) @?= Foo 900 "foo"
      , testCase "Monomorphic b"
           $ (foo & b%~(++"p")) @?= Foo 700 "foop"
@@ -109,7 +112,9 @@ tests = testGroup "Tests"
           $ (foo & a.negated %~ (+2)) @?= Foo 698 "foo"
      ]
   , testGroup "Lensing"
-     [ testCase "Monomorphic a"
+     [ testCase "Identity"
+          $ (37 & id%%~Just .const 57) @?= Just 57
+     , testCase "Monomorphic a"
           $ (foo & a%%~Just .const 900) @?= Just (Foo 900 "foo")
      , testCase "Monomorphic b"
           $ (foo & b%%~Just.(++"p")) @?= Just (Foo 700 "foop")
@@ -125,7 +130,9 @@ tests = testGroup "Tests"
           $ (foo & a.negated %%~ Just.(+2)) @?= Just (Foo 698 "foo")
      ]
   , testGroup "Prism matching"
-     [ testCase "_Fob success"
+     [ testCase "Identity"
+          $ (37 & matching id) @?= (Right 37 :: Either () Int)
+     , testCase "_Fob success"
           $ (foofob & matching _Fob) @?= Right foo
      , testCase "_Fob failure"
           $ (barfab & matching _Fob) @?= Left barfab
