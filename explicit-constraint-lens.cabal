@@ -3,8 +3,15 @@
 
 name:                explicit-constraint-lens
 version:             0.1.0.0
-synopsis:            Lenses without the confusion, but with all the polymorphism.
--- description:         
+synopsis:            Fully-flexible polymorphic lenses, without any bizarre profunctors
+description:         A snowclone of the great <http://hackage.haskell.org/package/lens lens>
+                     library. It implements the full hierarchy from isomorphisms to
+                     setters and folds, but instead of the Van Laarhoven implementation with
+                     universally-quantified functor mappings (powerful and elegant, but
+                     infamously beginner-scaring), it encapsulates the various
+                     realworld-usecase signatures like get+set or build+distinguish
+                     in a well-confined GADT and expresses the relations between the
+                     different optics explicitly, with a dedicated class hierarchy.
 homepage:            https://github.com/leftaroundabout/explicit-constraint-lens
 license:             GPL-3
 license-file:        LICENSE
