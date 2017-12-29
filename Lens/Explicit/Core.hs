@@ -34,6 +34,8 @@ data OpticC c x y where
   OpticC :: c s t a b -> Optic c s t a b
 
 class (Category (OpticC c)) => Optical c where
+  type OptDens c (ζ :: * -> * -> * -> * -> *) :: Constraint
+  cloneOptic :: OptDens c ζ => c s t a b -> ζ s t a b
   (∘) :: c x y s t -> c s t a b -> c x y a b
 
 instance (Optical c) => Category (OpticC c) where
@@ -83,6 +85,8 @@ instance FromIso TraversalTrait where
 data LensTrait s t a b = Lens (s -> a) (s -> b -> t)
 
 instance Optical LensTrait where
+  type OptDens LensTrait ζ = FromLens ζ
+  cloneOptic (Lens f φ) = lens f φ
   Lens g γ ∘ Lens f φ = Lens (f . g) (\s b -> γ s $ φ (g s) b)
 
 type ALens s t a b = Optic LensTrait s t a b
@@ -108,6 +112,8 @@ instance FromLens SetterTrait where
 data PrismTrait s t a b = Prism (b -> t) (s -> Either t a)
 
 instance Optical PrismTrait where
+  type OptDens PrismTrait ζ = FromPrism ζ
+  cloneOptic (Prism f φ) = prism f φ
   Prism γ g ∘ Prism φ f = Prism (γ . φ) (g >=> (γ+++id) . f)
 
 type APrism s t a b = Optic PrismTrait s t a b
@@ -133,6 +139,8 @@ instance FromPrism ReviewTrait where
 data GetterTrait s t a b = Getter (s -> a)
 
 instance Optical GetterTrait where
+  type OptDens GetterTrait ζ = FromGetter ζ
+  cloneOptic (Getter f) = to f
   Getter g ∘ Getter f = Getter (f . g)
 
 type AGetter s a = Optic GetterTrait s s a a
@@ -165,13 +173,14 @@ instance FromReview ReviewTrait where
   unto = Review
 
 
-
 -- ⠉⢹⡏⠉⣤⣠⢠⢤⡀⢤⡀⢠⢄⡤⢤⡀⣤⣠⢠⡤⠤⠀⡤⣄⠀⣿⢠⡤⠤
 -- ⠀⢸⡇⠀⣿⠀⢿⡹⣇⠈⣷⡎⠸⣗⣚⡃⣿⠀⢈⣛⡷⠸⣏⢿⡀⣿⢈⣛⡷
 
 data TraversalTrait s t a b = Traversal (∀ f . Applicative f => (a -> f b) -> s -> f t)
 
 instance Optical TraversalTrait where
+  type OptDens TraversalTrait ζ = FromTraversal ζ
+  cloneOptic (Traversal η) = traversed η
   Traversal η ∘ Traversal θ = Traversal (η . θ)
 
 type ATraversal s t a b = Optic TraversalTrait s t a b
@@ -193,6 +202,8 @@ instance FromTraversal FoldTrait where
 data SetterTrait s t a b = Setter ((a -> b) -> s -> t)
 
 instance Optical SetterTrait where
+  type OptDens SetterTrait ζ = FromSetter ζ
+  cloneOptic (Setter η) = sets η
   Setter s ∘ Setter σ = Setter $ s . σ
 
 type ASetter s t a b = Optic SetterTrait s t a b
@@ -210,12 +221,16 @@ instance FromSetter SetterTrait where
 data FoldTrait s t a b = Fold (∀ r . Monoid r => (a -> r) -> s -> r)
 
 instance Optical FoldTrait where
+  type OptDens FoldTrait ζ = FromFold ζ
+  cloneOptic (Fold η) = folds η
   Fold η ∘ Fold θ = Fold (η . θ)
 
 type AFold s t a b = Optic FoldTrait s t a b
 type Fold s t a b = ∀ c . FromFold c => Optic c s t a b
 
 class FromTraversal c => FromFold c where
+  folds :: (∀ r . Monoid r => (a -> r) -> s -> r) -> c s t a b
   folded :: Foldable f => c (f a) t a b
+  folded = folds foldMap
 instance FromFold FoldTrait where
-  folded = Fold foldMap
+  folds = Fold
