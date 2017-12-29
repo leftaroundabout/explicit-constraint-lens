@@ -73,7 +73,11 @@ _Fob = prism (\(Foo α β) -> Fob β α)
                Fab ζ δ -> Left $ Fab ζ δ
                Fob β α -> Right $ Foo α β )
 
+barfab :: Zab Double
+barfab = Fab pi True
 
+foofob :: Zab ()
+foofob = Fob "foo" 700
 
 tests :: TestTree
 tests = testGroup "Tests"
@@ -85,8 +89,8 @@ tests = testGroup "Tests"
      , testCase "Nested c.a" $ foobar^.c.a @?= 700
      , testCase "Nested d.id" $ foobar^.d.id @?= False
      , testCase "Composed a.negated" $ foo^.a.negated @?= -700
-     , testCase "Reviewing _Fab" $ bar^.re _Fab @?= Fab pi True
-     , testCase "Reviewing _Fob" $ foo^.re _Fob @?= (Fob "foo" 700 :: Zab ())
+     , testCase "Reviewing _Fab" $ bar^.re _Fab @?= barfab
+     , testCase "Reviewing _Fob" $ foo^.re _Fob @?= foofob
      ]
   , testGroup "Setting"
      [ testCase "Monomorphic a"
@@ -119,6 +123,17 @@ tests = testGroup "Tests"
           $ (foobar & d.id %%~ Just .not) @?= Just (Bar (Foo 700 "foo") True)
      , testCase "Composed a.negated"
           $ (foo & a.negated %%~ Just.(+2)) @?= Just (Foo 698 "foo")
+     ]
+  , testGroup "Prism matching"
+     [ testCase "_Fob success"
+          $ (foofob & matching _Fob) @?= Right foo
+     , testCase "_Fob failure"
+          $ (barfab & matching _Fob) @?= Left barfab
+     , testCase "_Fab success"
+          $ (barfab & matching _Fab :: Either (Zab ()) (Bar Double))
+                                     @?= Right bar
+     , testCase "_Fab failure"
+          $ (foofob & matching _Fab) @?= Left foofob
      ]
   ]
 
