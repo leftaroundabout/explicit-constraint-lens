@@ -16,7 +16,6 @@ import Test.Tasty
 import Test.Tasty.HUnit
 
 import Prelude hiding ((.), id)
-import Control.Category
 
 
 main = defaultMain tests

@@ -14,23 +14,28 @@
 
 
 module Lens.Explicit (
-                     -- * Getters
+                     -- * Lenses and other optics
+                     -- ** Getters
                        to, Getter, AGetter, (^.)
-                     -- * Setters
+                     -- ** Setters
                      , sets, Setter, ASetter, (%~), (.~), Setter'
-                     -- * Lenses
+                     -- ** Lenses
                      , lens, Lens, ALens, (%%~), Lens'
-                     -- * Prisms
+                     -- ** Prisms
                      , prism, Prism, APrism, matching, Prism'
-                     -- * Isomorphisms
+                     -- ** Isomorphisms
                      , iso, Iso, AnIso, from, under, Iso'
-                     -- * Folds
+                     -- ** Folds
                      , folded, Fold, AFold, foldMapOf
-                     -- * Traversals
+                     -- ** Traversals
                      , traversed, Traversal, ATraversal, traverseOf, Traversal'
+                     -- * Composition
+                     , Cat.id, (Cat..), (&)
                      ) where
 
 import qualified Lens.Explicit.Core as Ж
+import qualified Control.Category as Cat
+import Data.Function
 
 
 
