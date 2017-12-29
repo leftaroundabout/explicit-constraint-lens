@@ -66,6 +66,22 @@ tests = testGroup "Tests"
      , testCase "Nested d.id" $ foobar^.d.id @?= False
      , testCase "Composed a.negated" $ foo^.a.negated @?= -700
      ]
+  , testGroup "Setting"
+     [ testCase "Monomorphic a"
+          $ (foo & a.~900) @?= Foo 900 "foo"
+     , testCase "Monomorphic b"
+          $ (foo & b%~(++"p")) @?= Foo 700 "foop"
+     , testCase "Polymorphic c"
+          $ (bar & c.~314) @?= Bar 314 True
+     , testCase "Monomorphic d"
+          $ (bar & d%~not) @?= Bar pi False
+     , testCase "Nested c.a"
+          $ (foobar & c.a .~ 900) @?= Bar (Foo 900 "foo") False
+     , testCase "Nested d.id"
+          $ (foobar & d.id %~ not) @?= Bar (Foo 700 "foo") True
+     , testCase "Composed a.negated"
+          $ (foo & a.negated %~ (+2)) @?= Foo 698 "foo"
+     ]
   ]
 
 
