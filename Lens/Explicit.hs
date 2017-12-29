@@ -15,19 +15,19 @@
 
 module Lens.Explicit (
                      -- * Getters
-                       to, Getter, AGetter, (^.) 
+                       to, Getter, AGetter, (^.)
                      -- * Setters
-                     , sets, Setter, ASetter, (%~), (.~)
+                     , sets, Setter, ASetter, (%~), (.~), Setter'
                      -- * Lenses
-                     , lens, Lens, ALens, (%%~)
+                     , lens, Lens, ALens, (%%~), Lens'
                      -- * Prisms
-                     , prism, Prism, APrism, matching
+                     , prism, Prism, APrism, matching, Prism'
                      -- * Isomorphisms
-                     , iso, Iso, AnIso, from, under
+                     , iso, Iso, AnIso, from, under, Iso'
                      -- * Folds
                      , folded, Fold, AFold, foldMapOf
                      -- * Traversals
-                     , traversed, Traversal, ATraversal, traverseOf
+                     , traversed, Traversal, ATraversal, traverseOf, Traversal'
                      ) where
 
 import qualified Lens.Explicit.Core as Ж
@@ -72,6 +72,8 @@ type Setter 𝑠 𝑡 𝑎 𝑏 = Ж.Setter 𝑠 𝑡 𝑎 𝑏
 -- | A setter that may also have additional capabilities, e.g. a 'Lens'.
 type ASetter 𝑠 𝑡 𝑎 𝑏 = Ж.ASetter 𝑠 𝑡 𝑎 𝑏
 
+type Setter' 𝑠 𝑎 = Setter 𝑠 𝑠 𝑎 𝑎
+
 
 infixr 4 %%~
 
@@ -91,6 +93,8 @@ type Lens 𝑠 𝑡 𝑎 𝑏 = Ж.Lens 𝑠 𝑡 𝑎 𝑏
 -- | A lens that may also have additional capabilities, e.g. an 'Iso'.
 type ALens 𝑠 𝑡 𝑎 𝑏 = Ж.ALens 𝑠 𝑡 𝑎 𝑏
 
+type Lens' 𝑠 𝑎 = Lens 𝑠 𝑠 𝑎 𝑎
+
 
 prism :: (𝑏 -> 𝑡) -> (𝑠 -> Either 𝑡 𝑎) -> Prism 𝑠 𝑡 𝑎 𝑏
 prism = Ж.prism
@@ -105,6 +109,8 @@ type Prism 𝑠 𝑡 𝑎 𝑏 = Ж.Prism 𝑠 𝑡 𝑎 𝑏
 
 -- | A prism that may also have additional capabilities, e.g. an 'Iso'.
 type APrism 𝑠 𝑡 𝑎 𝑏 = Ж.APrism 𝑠 𝑡 𝑎 𝑏
+
+type Prism' 𝑠 𝑎 = Prism 𝑠 𝑠 𝑎 𝑎
 
 
 under :: AnIso 𝑠 𝑡 𝑎 𝑏 -> (𝑡 -> 𝑠) -> 𝑏 -> 𝑎
@@ -125,6 +131,8 @@ type Iso 𝑠 𝑡 𝑎 𝑏 = Ж.Iso 𝑠 𝑡 𝑎 𝑏
 --   theoretical, since isomorphism is already the most powerful relation we describe.)
 type AnIso 𝑠 𝑡 𝑎 𝑏 = Ж.AnIso 𝑠 𝑡 𝑎 𝑏
 
+type Iso' 𝑠 𝑎 = Iso 𝑠 𝑠 𝑎 𝑎
+
 
 traverseOf :: Applicative 𝑓 => ATraversal 𝑠 𝑡 𝑎 𝑏 -> (𝑎 -> 𝑓 𝑏) -> 𝑠 -> 𝑓 𝑡
 traverseOf (Ж.Traversal y) = y
@@ -138,6 +146,8 @@ type Traversal 𝑠 𝑡 𝑎 𝑏 = Ж.Traversal 𝑠 𝑡 𝑎 𝑏
 
 -- | A traversal that may also have additional capabilities, e.g. a 'Lens' or 'Prism'.
 type ATraversal 𝑠 𝑡 𝑎 𝑏 = Ж.ATraversal 𝑠 𝑡 𝑎 𝑏
+
+type Traversal' 𝑠 𝑎 = Traversal 𝑠 𝑠 𝑎 𝑎
 
 
 foldMapOf :: Monoid 𝑟 => AFold 𝑠 𝑎 -> (𝑎 -> 𝑟) -> 𝑠 -> 𝑟
