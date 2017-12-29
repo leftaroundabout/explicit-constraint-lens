@@ -73,6 +73,8 @@ type Setter 𝑠 𝑡 𝑎 𝑏 = Ж.Setter 𝑠 𝑡 𝑎 𝑏
 type ASetter 𝑠 𝑡 𝑎 𝑏 = Ж.ASetter 𝑠 𝑡 𝑎 𝑏
 
 
+infixr 4 %%~
+
 (%%~) :: Functor 𝑓 => ALens 𝑠 𝑡 𝑎 𝑏 -> (𝑎 -> 𝑓 𝑏) -> 𝑠 -> 𝑓 𝑡
 (%%~) (Ж.Lens f φ) τ s = fmap (φ s) . τ $ f s
 
