@@ -44,6 +44,7 @@ import Data.Function
 infixl 8 ^.
 
 (^.) :: 𝑠 -> AGetter 𝑠 𝑎 -> 𝑎
+s ^. Ж.Equality = s
 s ^. Ж.Getter f = f s
 
 to :: (𝑠 -> 𝑎) -> Getter 𝑠 𝑎
@@ -60,6 +61,7 @@ type AGetter 𝑠 𝑎 = Ж.AGetter 𝑠 𝑎
 infixr 4 %~, .~
 
 (%~) :: ASetter 𝑠 𝑡 𝑎 𝑏 -> (𝑎 -> 𝑏) -> 𝑠 -> 𝑡
+Ж.Equality %~ m = m
 Ж.Setter f %~ m = f m
 
 (.~) :: ASetter 𝑠 𝑡 𝑎 𝑏 -> 𝑏 -> 𝑠 -> 𝑡
@@ -85,6 +87,7 @@ type Setter' 𝑠 𝑎 = Setter 𝑠 𝑠 𝑎 𝑎
 infixr 4 %%~
 
 (%%~) :: Functor 𝑓 => ALens 𝑠 𝑡 𝑎 𝑏 -> (𝑎 -> 𝑓 𝑏) -> 𝑠 -> 𝑓 𝑡
+(%%~) Ж.Equality τ s = τ s
 (%%~) (Ж.Lens f φ) τ s = fmap (φ s) . τ $ f s
 
 lens :: (𝑠 -> 𝑎) -> (𝑠 -> 𝑏 -> 𝑡) -> Lens 𝑠 𝑡 𝑎 𝑏
@@ -107,6 +110,7 @@ prism :: (𝑏 -> 𝑡) -> (𝑠 -> Either 𝑡 𝑎) -> Prism 𝑠 𝑡 𝑎 �
 prism = Ж.prism
 
 matching :: APrism 𝑠 𝑡 𝑎 𝑏 -> 𝑠 -> Either 𝑡 𝑎
+matching Ж.Equality = Right
 matching (Ж.Prism _ f) = f
 
 -- | Prisms are the categorical dual of lenses: whilst a lens /focuses/ in on a field
@@ -124,6 +128,7 @@ unto :: (𝑏 -> 𝑡) -> Review 𝑡 𝑏
 unto = Ж.unto
 
 re :: Ж.FromGetter c => AReview 𝑡 𝑏 -> Ж.Optic c 𝑡 𝑡 𝑏 𝑏
+re Ж.Equality = Ж.Equality
 re (Ж.Review f) = Ж.to f
 
 -- | Reviews are basically like constructors in languages without pattern matching:
@@ -136,9 +141,11 @@ type AReview 𝑡 𝑏 = Ж.AReview 𝑡 𝑏
 
 
 under :: AnIso 𝑠 𝑡 𝑎 𝑏 -> (𝑡 -> 𝑠) -> 𝑏 -> 𝑎
+under Ж.Equality g = g
 under (Ж.Iso f φ) g = f . g . φ
 
 from :: AnIso 𝑠 𝑡 𝑎 𝑏 -> Iso 𝑏 𝑎 𝑡 𝑠
+from Ж.Equality = Ж.Equality
 from (Ж.Iso f φ) = iso φ f
 
 iso :: (𝑠 -> 𝑎) -> (𝑏 -> 𝑡) -> Iso 𝑠 𝑡 𝑎 𝑏
@@ -157,6 +164,7 @@ type Iso' 𝑠 𝑎 = Iso 𝑠 𝑠 𝑎 𝑎
 
 
 traverseOf :: Applicative 𝑓 => ATraversal 𝑠 𝑡 𝑎 𝑏 -> (𝑎 -> 𝑓 𝑏) -> 𝑠 -> 𝑓 𝑡
+traverseOf Ж.Equality = id
 traverseOf (Ж.Traversal y) = y
 
 traversed :: (∀ 𝑓 . Applicative 𝑓 => (𝑎 -> 𝑓 𝑏) -> 𝑠 -> 𝑓 𝑡) -> Traversal 𝑠 𝑡 𝑎 𝑏
@@ -173,6 +181,7 @@ type Traversal' 𝑠 𝑎 = Traversal 𝑠 𝑠 𝑎 𝑎
 
 
 foldMapOf :: Monoid 𝑟 => AFold 𝑠 𝑎 -> (𝑎 -> 𝑟) -> 𝑠 -> 𝑟
+foldMapOf Ж.Equality = id
 foldMapOf (Ж.Fold y) = y
 
 folded :: Foldable 𝑓 => Fold (𝑓 𝑎) 𝑎
