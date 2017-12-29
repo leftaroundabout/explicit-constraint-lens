@@ -53,6 +53,9 @@ bar = Bar pi True
 foobar :: Bar Foo
 foobar = Bar foo False
 
+negated :: Iso' Int Int
+negated = iso negate negate
+
 tests :: TestTree
 tests = testGroup "Tests"
   [ testGroup "Getting"
@@ -62,6 +65,7 @@ tests = testGroup "Tests"
      , testCase "Monomorphic d" $ bar^.d @?= True
      , testCase "Nested c.a" $ foobar^.c.a @?= 700
      , testCase "Nested d.id" $ foobar^.d.id @?= False
+     , testCase "Composed a.negated" $ foo^.a.negated @?= -700
      ]
   ]
 
