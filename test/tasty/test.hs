@@ -15,6 +15,8 @@ import Lens.Explicit
 import Test.Tasty
 import Test.Tasty.HUnit
 
+import Prelude hiding ((.), id)
+import Control.Category
 
 
 main = defaultMain tests
@@ -48,6 +50,9 @@ d = lens _d $ \s x -> s{_d=x}
 bar :: Bar Double
 bar = Bar pi True
 
+foobar :: Bar Foo
+foobar = Bar foo False
+
 tests :: TestTree
 tests = testGroup "Tests"
   [ testGroup "Getting"
@@ -55,6 +60,8 @@ tests = testGroup "Tests"
      , testCase "Monomorphic b" $ foo^.b @?= "foo"
      , testCase "Polymorphic c" $ bar^.c @?= pi
      , testCase "Monomorphic d" $ bar^.d @?= True
+     , testCase "Nested c.a" $ foobar^.c.a @?= 700
+     , testCase "Nested d.id" $ foobar^.d.id @?= False
      ]
   ]
 
