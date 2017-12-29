@@ -31,6 +31,9 @@ a = lens _a $ \s x -> s{_a=x}
 b :: Lens' Foo String
 b = lens _b $ \s x -> s{_b=x}
 
+foo :: Foo
+foo = Foo 700 "foo"
+
 data Bar c = Bar
       { _c :: c
       , _d :: Bool
@@ -42,10 +45,16 @@ c = lens _c $ \s x -> Bar x (_d s)
 d :: Lens' (Bar c) Bool
 d = lens _d $ \s x -> s{_d=x}
 
+bar :: Bar Double
+bar = Bar pi True
+
 tests :: TestTree
 tests = testGroup "Tests"
   [ testGroup "Getting"
-     [ 
+     [ testCase "Monomorphic a" $ foo^.a @?= 700
+     , testCase "Monomorphic b" $ foo^.b @?= "foo"
+     , testCase "Polymorphic c" $ bar^.c @?= pi
+     , testCase "Monomorphic d" $ bar^.d @?= True
      ]
   ]
 
