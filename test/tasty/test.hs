@@ -82,6 +82,22 @@ tests = testGroup "Tests"
      , testCase "Composed a.negated"
           $ (foo & a.negated %~ (+2)) @?= Foo 698 "foo"
      ]
+  , testGroup "Lensing"
+     [ testCase "Monomorphic a"
+          $ (foo & a%%~Just .const 900) @?= Just (Foo 900 "foo")
+     , testCase "Monomorphic b"
+          $ (foo & b%%~Just.(++"p")) @?= Just (Foo 700 "foop")
+     , testCase "Polymorphic c"
+          $ (bar & c%%~Just .const 314) @?= Just (Bar 314 True)
+     , testCase "Monomorphic d"
+          $ (bar & d%%~Just .not) @?= Just (Bar pi False)
+     , testCase "Nested c.a"
+          $ (foobar & c.a %%~ Just .const 900) @?= Just (Bar (Foo 900 "foo") False)
+     , testCase "Nested d.id"
+          $ (foobar & d.id %%~ Just .not) @?= Just (Bar (Foo 700 "foo") True)
+     , testCase "Composed a.negated"
+          $ (foo & a.negated %%~ Just.(+2)) @?= Just (Foo 698 "foo")
+     ]
   ]
 
 
