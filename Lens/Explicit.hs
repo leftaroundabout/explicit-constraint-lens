@@ -23,6 +23,8 @@ module Lens.Explicit (
                      , lens, Lens, ALens, (%%~), Lens'
                      -- ** Prisms
                      , prism, Prism, APrism, matching, Prism'
+                     -- ** Reviews
+                     , unto, Review, AReview, re
                      -- ** Isomorphisms
                      , iso, Iso, AnIso, from, under, Iso'
                      -- ** Folds
@@ -49,7 +51,7 @@ to = Ж.to
 
 -- | Getters are basically just functions: accessors which can read a field (type @𝑎@)
 --   of some data structure (type @𝑠@), but not write back anything to the structure.
-type Getter 𝑠 𝑎 = Ж.Getter 𝑠 𝑠 𝑎 𝑠
+type Getter 𝑠 𝑎 = Ж.Getter 𝑠 𝑠 𝑎 𝑎
 
 -- | A getter that may also have additional capabilities, e.g. a 'Lens'.
 type AGetter 𝑠 𝑎 = Ж.AGetter 𝑠 𝑎
@@ -116,6 +118,21 @@ type Prism 𝑠 𝑡 𝑎 𝑏 = Ж.Prism 𝑠 𝑡 𝑎 𝑏
 type APrism 𝑠 𝑡 𝑎 𝑏 = Ж.APrism 𝑠 𝑡 𝑎 𝑏
 
 type Prism' 𝑠 𝑎 = Prism 𝑠 𝑠 𝑎 𝑎
+
+
+unto :: (𝑏 -> 𝑡) -> Review 𝑡 𝑏
+unto = Ж.unto
+
+re :: Ж.FromGetter c => AReview 𝑡 𝑏 -> Ж.Optic c 𝑡 𝑡 𝑏 𝑏
+re (Ж.Review f) = Ж.to f
+
+-- | Reviews are basically like constructors in languages without pattern matching:
+--   /prisms without read permission/. Because such a constructor is just a function,
+--   and getters are functions too, you can also consider a review as a “reverse 'Getter'”.
+type Review 𝑡 𝑏 = Ж.Review 𝑡 𝑡 𝑏 𝑏
+
+-- | A review that may also have additional capabilities, e.g. a 'Prism'.
+type AReview 𝑡 𝑏 = Ж.AReview 𝑡 𝑏
 
 
 under :: AnIso 𝑠 𝑡 𝑎 𝑏 -> (𝑡 -> 𝑠) -> 𝑏 -> 𝑎

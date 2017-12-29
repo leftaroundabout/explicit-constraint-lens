@@ -27,6 +27,7 @@ data GetterTrait
 data SetterTrait
 data LensTrait
 data PrismTrait
+data ReviewTrait
 data FoldTrait
 data TraversalTrait
 
@@ -40,6 +41,7 @@ data OpticC c x y where
   Traversal :: (∀ f . Applicative f => (a -> f b) -> s -> f t)
                              -> ATraversal s t a b
   Getter :: (s -> a) -> Optic GetterTrait s t a b
+  Review :: (b -> t) -> Optic ReviewTrait s t a b
   Setter :: ((a -> b) -> s -> t) -> ASetter s t a b
 
 instance Category (OpticC c) where
@@ -67,6 +69,8 @@ instance FromIso IsoTrait where
   iso = Iso
 instance FromIso GetterTrait where
   iso f _ = Getter f
+instance FromIso ReviewTrait where
+  iso _ φ = Review φ
 instance FromIso LensTrait where
   iso f φ = Lens f (\_ b -> φ b)
 instance FromIso PrismTrait where
@@ -115,6 +119,8 @@ instance FromPrism FoldTrait where
   prism φ f = Fold (\τ -> either (const mempty) τ . f)
 instance FromPrism SetterTrait where
   prism φ f = Setter (\τ -> either id (φ . τ) . f)
+instance FromPrism ReviewTrait where
+  prism φ _ = Review φ
 
 
 -- ⣴⠋⠉⠁⣠⠤⣄⢼⡧⠠⣿⢄⡤⢤⡀⣤⣠⢠⡤⠤
@@ -124,13 +130,23 @@ type AGetter s a = Optic GetterTrait s s a a
 type Getter s t a b = ∀ c . FromGetter c => Optic c s t a b
 
 class FromLens c => FromGetter c where
-  to :: (s -> a) -> Optic c s t a t
+  to :: (s -> a) -> Optic c s t a b
 instance FromGetter GetterTrait where
   to = Getter
-instance FromGetter TraversalTrait where
-  to f = Traversal (\t -> t . f)
 instance FromGetter FoldTrait where
   to f = Fold (\t -> t . f)
+
+
+-- ⣿⢉⡷⢀⡤⢤⡠⣄⠀⡤⢨⡅⣠⠤⣄⢠⡄⢠⡄⡠⢠⡤⠤
+-- ⣿⠙⣧⡸⣗⣚⡃⢹⣶⠁⢸⡇⢿⣒⣛⠀⣿⠇⣧⠇⢈⣛⡷
+
+type AReview b t = Optic ReviewTrait t t b b
+type Review s t a b = ∀ c . FromReview c => Optic c s t a b
+
+class FromPrism c => FromReview c where
+  unto :: (b -> t) -> Optic c s t a b
+instance FromReview ReviewTrait where
+  unto = Review
 
 
 
