@@ -30,7 +30,7 @@ data PrismTrait
 data FoldTrait
 data TraversalTrait
 
-type Optic c s t a b = OpticC c (s,t) (a,b)
+type Optic c s t a b = OpticC c (a,b) (s,t)
 data OpticC c x y where
   Equality :: OpticC c q q
   Iso :: (s -> a) -> (b -> t) -> AnIso s t a b
@@ -46,13 +46,13 @@ instance Category (OpticC c) where
   id = Equality
   Equality . f = f
   f . Equality = f
-  Iso f φ . Iso g γ = Iso (f . g) (γ . φ)
-  Lens f φ . Lens g γ = Lens (f . g) (\s b -> γ s $ φ (g s) b)
-  Prism φ f . Prism γ g = Prism (γ . φ) (g >=> (γ+++id) . f)
-  Getter f . Getter g = Getter (f . g)
-  Setter σ . Setter s = Setter $ s . σ
-  Fold θ . Fold η = Fold (η . θ)
-  Traversal θ . Traversal η = Traversal (η . θ)
+  Iso g γ . Iso f φ = Iso (f . g) (γ . φ)
+  Lens g γ . Lens f φ = Lens (f . g) (\s b -> γ s $ φ (g s) b)
+  Prism γ g . Prism φ f = Prism (γ . φ) (g >=> (γ+++id) . f)
+  Getter g . Getter f = Getter (f . g)
+  Setter s . Setter σ = Setter $ s . σ
+  Fold η . Fold θ = Fold (η . θ)
+  Traversal η . Traversal θ = Traversal (η . θ)
   
 
 -- ⣿⢠⡤⠤⢀⣤⢤⣄⢠⡤⠤
