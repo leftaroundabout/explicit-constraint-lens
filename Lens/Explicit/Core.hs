@@ -17,6 +17,7 @@ module Lens.Explicit.Core where
 import Prelude hiding (id, (.))
 import Control.Category
 import Control.Monad ((>=>))
+import Control.Applicative (Const(..))
 import Control.Arrow ((+++))
 import Data.Functor.Identity
 
@@ -35,7 +36,7 @@ data OpticC c x y where
   Iso :: (s -> a) -> (b -> t) -> AnIso s t a b
   Lens :: (s -> a) -> (s -> b -> t) -> ALens s t a b
   Prism :: (b -> t) -> (s -> Either t a) -> APrism s t a b
-  Fold :: (∀ f . Applicative f => (a -> f r) -> s -> f r) -> Optic FoldTrait s b a r
+  Fold :: (∀ r . Monoid r => (a -> r) -> s -> r) -> Optic FoldTrait s t a b
   Traversal :: (∀ f . Applicative f => (a -> f b) -> s -> f t)
                              -> ATraversal s t a b
   Getter :: (s -> a) -> Optic GetterTrait s t a b
@@ -48,10 +49,10 @@ instance Category (OpticC c) where
   Iso f φ . Iso g γ = Iso (f . g) (γ . φ)
   Lens f φ . Lens g γ = Lens (f . g) (\s b -> γ s $ φ (g s) b)
   Prism φ f . Prism γ g = Prism (γ . φ) (g >=> (γ+++id) . f)
-                                                -- Left ξ -> Left $ γ ξ
-                                                -- Right υ -> Right υ)
   Getter f . Getter g = Getter (f . g)
   Setter σ . Setter s = Setter $ s . σ
+  Fold θ . Fold η = Fold (η . θ)
+  Traversal θ . Traversal η = Traversal (η . θ)
   
 
 -- ⣿⢠⡤⠤⢀⣤⢤⣄⢠⡤⠤
@@ -92,6 +93,8 @@ instance FromLens LensTrait where
   lens = Lens
 instance FromLens TraversalTrait where
   lens f φ = Traversal (\τ s -> fmap (φ s) . τ $ f s)
+instance FromLens FoldTrait where
+  lens f _ = Fold (\τ -> τ . f)
 instance FromLens SetterTrait where
   lens f φ = Setter (\τ s -> φ s . τ $ f s)
 
@@ -108,6 +111,8 @@ instance FromPrism PrismTrait where
   prism = Prism
 instance FromPrism TraversalTrait where
   prism φ f = Traversal (\τ -> either pure (fmap φ . τ) . f)
+instance FromPrism FoldTrait where
+  prism φ f = Fold (\τ -> either (const mempty) τ . f)
 instance FromPrism SetterTrait where
   prism φ f = Setter (\τ -> either id (φ . τ) . f)
 
@@ -124,6 +129,8 @@ instance FromGetter GetterTrait where
   to = Getter
 instance FromGetter TraversalTrait where
   to f = Traversal (\t -> t . f)
+instance FromGetter FoldTrait where
+  to f = Fold (\t -> t . f)
 
 
 
@@ -139,6 +146,8 @@ instance FromTraversal TraversalTrait where
   traversed = Traversal
 instance FromTraversal SetterTrait where
   traversed θ = Setter (\f -> runIdentity . θ (Identity . f))
+instance FromTraversal FoldTrait where
+  traversed θ = Fold (\t -> getConst . θ (Const . t))
 
 
 -- ⣾⣍⠁⢀⡤⢤⡠⣿⠄⢼⡧⣠⠤⣄⢠⣄⡄⣤⠤⠄
@@ -151,3 +160,15 @@ class FromTraversal c => FromSetter c where
   sets :: ((a -> b) -> s -> t) -> Optic c s t a b
 instance FromSetter SetterTrait where
   sets = Setter
+
+
+-- ⣿⣉⢁⣤⢤⣄⢸⡇⣠⠤⣿⢠⡤⠤
+-- ⣿⠀⠸⣧⣠⡿⢸⡇⢿⣀⣿⢈⣛⡷
+
+type AFold s t a b = Optic FoldTrait s t a b
+type Fold s t a b = ∀ c . FromFold c => Optic c s t a b
+
+class FromTraversal c => FromFold c where
+  folded :: Foldable f => Optic c (f a) t a b
+instance FromFold FoldTrait where
+  folded = Fold foldMap

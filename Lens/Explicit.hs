@@ -26,6 +26,8 @@ module Lens.Explicit (
                      , from, iso, under, Iso, AnIso
                      -- * Traversals
                      , traverseOf, traversed, Traversal, ATraversal
+                     -- * Folds
+                     , foldMapOf, folded, Fold, AFold
                      ) where
 
 import qualified Lens.Explicit.Core as Ж
@@ -100,4 +102,14 @@ traversed = Ж.traversed
 
 type Traversal s t a b = Ж.Traversal s t a b
 type ATraversal s t a b = Ж.ATraversal s t a b
+
+
+foldMapOf :: Monoid r => AFold s a -> (a -> r) -> s -> r
+foldMapOf (Ж.Fold y) = y
+
+folded :: Foldable f => Fold (f a) a
+folded = Ж.folded
+
+type Fold s a = Ж.Fold s s a s
+type AFold s a = Ж.AFold s s a s
 
