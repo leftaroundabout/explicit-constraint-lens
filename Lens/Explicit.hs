@@ -32,13 +32,15 @@ module Lens.Explicit (
                      -- ** Traversals
                      , traversed, Traversal, ATraversal, traverseOf, Traversal'
                      -- * Composition
+                     -- $composInfo
                      , Cat.id, (Cat..), (&)
                      ) where
 
 import qualified Lens.Explicit.Core as Ж
 import Lens.Explicit.Core (OpticC(..))
-import qualified Control.Category as Cat
-import Data.Function
+import Prelude hiding (id, (.))
+import Control.Category as Cat
+import Data.Function hiding (id, (.))
 
 
 
@@ -196,3 +198,30 @@ type Fold 𝑠 𝑎 = Ж.Fold 𝑠 𝑠 𝑎 𝑠
 -- | A fold that may also have additional capabilities, e.g. a 'Getter' or 'Traversal'.
 type AFold 𝑠 𝑎 = Ж.AFold 𝑠 𝑠 𝑎 𝑠
 
+-- $composInfo
+-- Optics compose “OO style”, from left to right. For example, given
+-- 
+-- @
+-- data Foo = Foo Int String
+-- foostr :: 'Lens'' Foo String
+-- data Bar = Bar Foo Bool
+-- barfoo :: 'Lens'' Bar Foo
+-- 
+-- hideout :: bar
+-- hideout = Bar (Foo 7 "I'm here!") True
+-- @
+--
+-- you can use
+--
+-- @
+--    hideout '^.' barfoo'.'foostr
+-- @
+--
+-- to look up the @"I'm here!"@ string.
+-- 
+-- Optics of different power can directly be composed with each other, for instance,
+-- in the example above it would have also been sufficient if
+--
+-- @
+-- barfoo :: 'Getter' Bar Foo
+-- @
