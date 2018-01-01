@@ -27,13 +27,15 @@ module Lens.Explicit (
                      , unto, Review, AReview, re
                      -- ** Isomorphisms
                      , iso, Iso, AnIso, from, under, Iso'
+                     -- ** Equalities
+                     , Cat.id, Equality, AnEquality, Equality', simple
                      -- ** Folds
                      , folded, Fold, AFold, foldMapOf
                      -- ** Traversals
                      , traversed, Traversal, ATraversal, traverseOf, Traversal'
                      -- * Composition
                      -- $composInfo
-                     , Cat.id, (Cat..), (&)
+                     , (Cat..), (&)
                      ) where
 
 import qualified Lens.Explicit.Core as Ж
@@ -159,11 +161,25 @@ iso f g = OpticC $ Ж.iso f g
 --   prism that distinguishes the only constructor available.
 type Iso 𝑠 𝑡 𝑎 𝑏 = Ж.Iso 𝑠 𝑡 𝑎 𝑏
 
--- | An isomorphism that could also have additional capabilities. (This is somewhat
---   theoretical, since isomorphism is already the most powerful relation we describe.)
+-- | An isomorphism that could also have additional capabilities, i.e. either
+ --  an 'Iso' or 'Equality'.
 type AnIso 𝑠 𝑡 𝑎 𝑏 = Ж.AnIso 𝑠 𝑡 𝑎 𝑏
 
 type Iso' 𝑠 𝑎 = Iso 𝑠 𝑠 𝑎 𝑎
+
+
+-- | Equalities are simply witnesses that nothing nontrivial happens. I.e. they are
+--   always identity isomorphisms.
+type Equality 𝑠 𝑡 𝑎 𝑏 = Ж.Equality 𝑠 𝑡 𝑎 𝑏
+
+-- | An equality that could also have additional capabilities. This is only theoretical,
+--   because all equalities do by design nothing at all.
+type AnEquality 𝑠 𝑡 𝑎 𝑏 = Ж.AnEquality 𝑠 𝑡 𝑎 𝑏
+
+type Equality' 𝑠 𝑎 = Equality 𝑠 𝑠 𝑎 𝑎
+
+simple :: Equality' 𝑎 𝑎
+simple = id
 
 
 traverseOf :: Applicative 𝑓 => ATraversal 𝑠 𝑡 𝑎 𝑏 -> (𝑎 -> 𝑓 𝑏) -> 𝑠 -> 𝑓 𝑡

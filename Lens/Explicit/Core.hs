@@ -15,6 +15,7 @@
 {-# LANGUAGE TypeFamilies                 #-}
 {-# LANGUAGE FlexibleInstances            #-}
 {-# LANGUAGE FlexibleContexts             #-}
+{-# LANGUAGE EmptyCase                    #-}
 
 module Lens.Explicit.Core where
     
@@ -44,6 +45,20 @@ instance (Optical c) => Category (OpticC c) where
   f . Equality = f
   OpticC f . OpticC g = OpticC $ f ∘ g
 
+
+
+-- ⣿⣉⡉⣠⠤⣤⢠⡄⢠⡄⢠⢤⡀⢸⡇⣭⠠⣿⠄⣭⢀⡤⢤⡀⣤⠤⠄
+-- ⣿⣀⣀⢿⣀⣿⠸⣇⣸⡇⢿⡹⣇⢸⡇⣿⠀⣿⡀⣿⠸⣗⣚⡃⣙⣻⠆
+-- ⠀⠀⠀⠀⠀⠛⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+data EqualityTrait s t a b
+
+instance Optical EqualityTrait where
+  type OptDens EqualityTrait ζ = ()
+  cloneOptic e = case e of {}
+  e∘s = case (e,s) of {}
+
+type AnEquality s t a b = Optic EqualityTrait s t a b
+type Equality s t a b = ∀ c . Optical c => Optic c s t a b
   
 
 -- ⣿⢠⡤⠤⢀⣤⢤⣄⢠⡤⠤
