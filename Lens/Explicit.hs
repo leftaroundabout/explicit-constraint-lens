@@ -36,6 +36,7 @@ module Lens.Explicit (
                      -- * Composition
                      -- $composInfo
                      , (Cat..), (&)
+                     , weaken
                      ) where
 
 import qualified Lens.Explicit.Core as Ж
@@ -241,3 +242,17 @@ type AFold 𝑠 𝑎 = Ж.AFold 𝑠 𝑠 𝑎 𝑠
 -- @
 -- barfoo :: 'Getter' Bar Foo
 -- @
+--
+-- This is not possible for the 'AGetter', 'ALens' etc. varieties; use 'weaken' in
+-- this case.
+
+
+-- | Re-use e.g. an 'AnIso' as a 'Lens', or an 'AGetter' as a 'Fold', etc..
+--   This is only necessary if the type has for some reason been narrowed down to one
+--   of the @An𝓞𝑝𝑡𝑖𝑐@ varieties.
+--
+--   'weaken' is elsewhere known as @cloneLens@, @cloneIso@ etc..
+weaken :: (Ж.Optical c, Ж.Optical ζ, Ж.OptDens c ζ)
+               => Ж.Optic c 𝑠 𝑡 𝑎 𝑏 -> Ж.Optic ζ 𝑠 𝑡 𝑎 𝑏
+weaken Ж.Equality = id
+weaken (Ж.OpticC c) = Ж.OpticC $ Ж.cloneOptic c
