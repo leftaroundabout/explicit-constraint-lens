@@ -50,11 +50,11 @@ instance (Optical c) => Category (OpticC c) where
 -- ⣿⢈⣛⡷⠸⣧⣠⡿⢈⣛⡷
 
 data IsoTrait s t a b = Iso (s -> a) (b -> t)
-instance Category (OpticC IsoTrait) where
-  id = Equality
-  Equality . f = f
-  f . Equality = f
-  OpticC (Iso g γ) . OpticC (Iso f φ) = OpticC $ Iso (f . g) (γ . φ)
+
+instance Optical IsoTrait where
+  type OptDens IsoTrait ζ = FromIso ζ
+  cloneOptic (Iso f φ) = iso f φ
+  Iso g γ ∘ Iso f φ = Iso (f . g) (γ . φ)
 
 type AnIso s t a b = Optic IsoTrait s t a b
 type Iso s t a b = ∀ c . FromIso c => Optic c s t a b
@@ -158,11 +158,11 @@ instance FromGetter FoldTrait where
 -- ⣿⠙⣧⡸⣗⣚⡃⢹⣶⠁⢸⡇⢿⣒⣛⠀⣿⠇⣧⠇⢈⣛⡷
 
 data ReviewTrait s t a b = Review (b -> t)
-instance Category (OpticC ReviewTrait) where
-  id = Equality
-  Equality . f = f
-  f . Equality = f
-  OpticC (Review η) . OpticC (Review θ) = OpticC $ Review (η . θ)
+
+instance Optical ReviewTrait where
+  type OptDens ReviewTrait ζ = FromReview ζ
+  cloneOptic (Review η) = unto η
+  Review η ∘ Review θ = Review (η . θ)
 
 type AReview b t = Optic ReviewTrait t t b b
 type Review s t a b = ∀ c . FromReview c => Optic c s t a b
