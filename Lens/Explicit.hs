@@ -49,7 +49,7 @@ import Data.Function hiding (id, (.))
 
 infixl 8 ^.
 
-(^.) :: 𝑠 -> AGetter 𝑠 𝑎 -> 𝑎
+(^.) :: 𝑠 -> AGetter 𝑠 𝑡 𝑎 𝑏 -> 𝑎
 s ^. Ж.Equality = s
 s ^. OpticC (Ж.Getter f) = f s
 
@@ -61,7 +61,7 @@ to = OpticC . Ж.to
 type Getter 𝑠 𝑎 = Ж.Getter 𝑠 𝑠 𝑎 𝑎
 
 -- | A getter that may also have additional capabilities, e.g. a 'Lens'.
-type AGetter 𝑠 𝑎 = Ж.AGetter 𝑠 𝑎
+type AGetter 𝑠 𝑡 𝑎 𝑏 = Ж.AGetter 𝑠 𝑡 𝑎 𝑏
 
 
 infixr 4 %~, .~
@@ -133,7 +133,7 @@ type Prism' 𝑠 𝑎 = Prism 𝑠 𝑠 𝑎 𝑎
 unto :: (𝑏 -> 𝑡) -> Review 𝑡 𝑏
 unto = OpticC . Ж.unto
 
-re :: Ж.FromGetter c => AReview 𝑡 𝑏 -> Ж.Optic c 𝑡 𝑡 𝑏 𝑏
+re :: Ж.FromGetter c => AReview 𝑏 𝑎 𝑡 𝑠 -> Ж.Optic c 𝑠 𝑡 𝑎 𝑏
 re Ж.Equality = Ж.Equality
 re (OpticC (Ж.Review f)) = OpticC $ Ж.to f
 
@@ -143,7 +143,7 @@ re (OpticC (Ж.Review f)) = OpticC $ Ж.to f
 type Review 𝑡 𝑏 = Ж.Review 𝑡 𝑡 𝑏 𝑏
 
 -- | A review that may also have additional capabilities, e.g. a 'Prism'.
-type AReview 𝑡 𝑏 = Ж.AReview 𝑡 𝑏
+type AReview 𝑠 𝑡 𝑎 𝑏 = Ж.AReview 𝑠 𝑡 𝑎 𝑏
 
 
 under :: AnIso 𝑠 𝑡 𝑎 𝑏 -> (𝑡 -> 𝑠) -> 𝑏 -> 𝑎

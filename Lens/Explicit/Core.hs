@@ -158,7 +158,7 @@ instance Optical GetterTrait where
   cloneOptic (Getter f) = to f
   Getter g ∘ Getter f = Getter (f . g)
 
-type AGetter s a = Optic GetterTrait s s a a
+type AGetter s t a b = Optic GetterTrait s t a b
 type Getter s t a b = ∀ c . FromGetter c => Optic c s t a b
 
 class FromLens c => FromGetter c where
@@ -179,7 +179,7 @@ instance Optical ReviewTrait where
   cloneOptic (Review η) = unto η
   Review η ∘ Review θ = Review (η . θ)
 
-type AReview b t = Optic ReviewTrait t t b b
+type AReview s t a b = Optic ReviewTrait s t a b
 type Review s t a b = ∀ c . FromReview c => Optic c s t a b
 
 class FromPrism c => FromReview c where
