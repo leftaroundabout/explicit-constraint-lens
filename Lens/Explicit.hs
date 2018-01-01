@@ -133,7 +133,7 @@ type Prism' 𝑠 𝑎 = Prism 𝑠 𝑠 𝑎 𝑎
 unto :: (𝑏 -> 𝑡) -> Review 𝑡 𝑏
 unto = OpticC . Ж.unto
 
-re :: Ж.FromGetter c => AReview 𝑏 𝑎 𝑡 𝑠 -> Ж.Optic c 𝑠 𝑡 𝑎 𝑏
+re :: AReview 𝑠 𝑡 𝑎 𝑏 -> Getter 𝑏 𝑡
 re Ж.Equality = Ж.Equality
 re (OpticC (Ж.Review f)) = OpticC $ Ж.to f
 
