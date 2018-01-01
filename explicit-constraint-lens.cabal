@@ -2,7 +2,7 @@
 -- further documentation, see http://haskell.org/cabal/users-guide/
 
 name:                explicit-constraint-lens
-version:             0.1.0.0
+version:             0.1.1.0
 synopsis:            Fully-flexible polymorphic lenses, without any bizarre profunctors
 description:         A snowclone of the great <http://hackage.haskell.org/package/lens lens>
                      library. It implements the full hierarchy from isomorphisms to
