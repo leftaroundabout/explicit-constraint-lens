@@ -200,7 +200,7 @@ type ATraversal 𝑠 𝑡 𝑎 𝑏 = Ж.ATraversal 𝑠 𝑡 𝑎 𝑏
 type Traversal' 𝑠 𝑎 = Traversal 𝑠 𝑠 𝑎 𝑎
 
 
-foldMapOf :: Monoid 𝑟 => AFold 𝑠 𝑎 -> (𝑎 -> 𝑟) -> 𝑠 -> 𝑟
+foldMapOf :: Monoid 𝑟 => AFold 𝑠 𝑡 𝑎 𝑏 -> (𝑎 -> 𝑟) -> 𝑠 -> 𝑟
 foldMapOf Ж.Equality = id
 foldMapOf (OpticC (Ж.Fold y)) = y
 
@@ -213,7 +213,7 @@ folded = OpticC $ Ж.folded
 type Fold 𝑠 𝑎 = Ж.Fold 𝑠 𝑠 𝑎 𝑠
 
 -- | A fold that may also have additional capabilities, e.g. a 'Getter' or 'Traversal'.
-type AFold 𝑠 𝑎 = Ж.AFold 𝑠 𝑠 𝑎 𝑠
+type AFold 𝑠 𝑡 𝑎 𝑏 = Ж.AFold 𝑠 𝑡 𝑎 𝑏
 
 -- $composInfo
 -- Optics compose “OO style”, from left to right. For example, given
