@@ -74,7 +74,7 @@ instance Optical IsoTrait where
 type AnIso s t a b = Optic IsoTrait s t a b
 type Iso s t a b = ∀ c . FromIso c => Optic c s t a b
 
-class FromIso c where
+class Optical c => FromIso c where
   iso :: (s -> a) -> (b -> t) -> c s t a b
 instance FromIso IsoTrait where
   iso = Iso
