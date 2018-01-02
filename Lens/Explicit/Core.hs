@@ -28,6 +28,8 @@ import Data.Functor.Identity
 
 import GHC.Exts (Constraint)
 
+import Data.Semigroup
+
 
 type Optic c s t a b = OpticC c (a,b) (s,t)
 data OpticC c x y where
@@ -90,6 +92,8 @@ instance FromIso SetterTrait where
   iso f φ = Setter $ \u -> φ . u . f
 instance FromIso FoldTrait where
   iso f _ = Fold (\t -> t . f)
+instance FromIso Fold1Trait where
+  iso f _ = Fold1 (\t -> t . f)
 instance FromIso TraversalTrait where
   iso f φ = Traversal (\t -> fmap φ . t . f)
 
@@ -117,6 +121,8 @@ instance FromLens TraversalTrait where
   lens f φ = Traversal (\τ s -> fmap (φ s) . τ $ f s)
 instance FromLens FoldTrait where
   lens f _ = Fold (\τ -> τ . f)
+instance FromLens Fold1Trait where
+  lens f _ = Fold1 (\τ -> τ . f)
 instance FromLens SetterTrait where
   lens f φ = Setter (\τ s -> φ s . τ $ f s)
 
@@ -233,7 +239,7 @@ instance FromSetter SetterTrait where
 -- ⣿⣉⢁⣤⢤⣄⢸⡇⣠⠤⣿⢠⡤⠤
 -- ⣿⠀⠸⣧⣠⡿⢸⡇⢿⣀⣿⢈⣛⡷
 
-data FoldTrait s t a b = Fold (∀ r . Monoid r => (a -> r) -> s -> r)
+data FoldTrait s t a b = Fold (∀ r . (Monoid r, Semigroup r) => (a -> r) -> s -> r)
 
 instance Optical FoldTrait where
   type OptDens FoldTrait ζ = FromFold ζ
@@ -243,9 +249,27 @@ instance Optical FoldTrait where
 type AFold s t a b = Optic FoldTrait s t a b
 type Fold s t a b = ∀ c . FromFold c => Optic c s t a b
 
-class FromTraversal c => FromFold c where
-  folds :: (∀ r . Monoid r => (a -> r) -> s -> r) -> c s t a b
+class (FromTraversal c, FromFold1 c) => FromFold c where
+  folds :: (∀ r . (Monoid r, Semigroup r) => (a -> r) -> s -> r) -> c s t a b
   folded :: Foldable f => c (f a) t a b
   folded = folds foldMap
 instance FromFold FoldTrait where
   folds = Fold
+
+
+data Fold1Trait s t a b = Fold1 (∀ r . Semigroup r => (a -> r) -> s -> r)
+
+instance Optical Fold1Trait where
+  type OptDens Fold1Trait ζ = FromFold1 ζ
+  cloneOptic (Fold1 η) = folds1 η
+  Fold1 η ∘ Fold1 θ = Fold1 (η . θ)
+
+type AFold1 s t a b = Optic Fold1Trait s t a b
+type Fold1 s t a b = ∀ c . FromFold1 c => Optic c s t a b
+
+class FromLens c => FromFold1 c where
+  folds1 :: (∀ r . Semigroup r => (a -> r) -> s -> r) -> c s t a b
+instance FromFold1 FoldTrait where
+  folds1 = Fold
+instance FromFold1 Fold1Trait where
+  folds1 = Fold1

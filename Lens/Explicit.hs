@@ -31,6 +31,8 @@ module Lens.Explicit (
                      , Cat.id, Equality, AnEquality, Equality', simple
                      -- ** Folds
                      , folded, Fold, AFold, foldMapOf
+                     -- *** Minimum-length 1
+                     , Fold1, AFold1, foldMap1Of
                      -- ** Traversals
                      , traversed, Traversal, ATraversal, traverseOf, Traversal'
                      -- * Composition
@@ -45,6 +47,7 @@ import Prelude hiding (id, (.))
 import Control.Category as Cat
 import Data.Function hiding (id, (.))
 
+import Data.Semigroup
 
 
 infixl 8 ^.
@@ -200,7 +203,7 @@ type ATraversal 𝑠 𝑡 𝑎 𝑏 = Ж.ATraversal 𝑠 𝑡 𝑎 𝑏
 type Traversal' 𝑠 𝑎 = Traversal 𝑠 𝑠 𝑎 𝑎
 
 
-foldMapOf :: Monoid 𝑟 => AFold 𝑠 𝑡 𝑎 𝑏 -> (𝑎 -> 𝑟) -> 𝑠 -> 𝑟
+foldMapOf :: (Monoid 𝑟, Semigroup 𝑟) => AFold 𝑠 𝑡 𝑎 𝑏 -> (𝑎 -> 𝑟) -> 𝑠 -> 𝑟
 foldMapOf Ж.Equality = id
 foldMapOf (OpticC (Ж.Fold y)) = y
 
@@ -212,8 +215,20 @@ folded = OpticC $ Ж.folded
 --   have “write permission”.
 type Fold 𝑠 𝑎 = Ж.Fold 𝑠 𝑠 𝑎 𝑠
 
--- | A fold that may also have additional capabilities, e.g. a 'Getter' or 'Traversal'.
+-- | A fold that may also have additional capabilities, e.g. a 'Getter', 'Traversal'
+--   or 'Fold1'.
 type AFold 𝑠 𝑡 𝑎 𝑏 = Ж.AFold 𝑠 𝑡 𝑎 𝑏
+
+foldMap1Of :: (Semigroup 𝑟) => AFold1 𝑠 𝑡 𝑎 𝑏 -> (𝑎 -> 𝑟) -> 𝑠 -> 𝑟
+foldMap1Of Ж.Equality = id
+foldMap1Of (OpticC (Ж.Fold1 y)) = y
+
+-- | 'Fold1' is slightly stronger than 'Fold': it requires that there is at least
+--   one targeted value in the structure.
+type Fold1 𝑠 𝑎 = Ж.Fold1 𝑠 𝑠 𝑎 𝑠
+
+-- | A 'Fold1' that may also have additional capabilities, e.g. a 'Getter' or 'Lens'.
+type AFold1 𝑠 𝑡 𝑎 𝑏 = Ж.AFold1 𝑠 𝑡 𝑎 𝑏
 
 -- $composInfo
 -- Optics compose “OO style”, from left to right. For example, given
