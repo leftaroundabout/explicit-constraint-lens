@@ -59,8 +59,6 @@ instance Optical EqualityTrait where
   cloneOptic e = case e of {}
   e∘s = case (e,s) of {}
 
-type AnEquality s t a b = Optic EqualityTrait s t a b
-type Equality s t a b = ∀ c . Optical c => Optic c s t a b
   
 
 -- ⣿⢠⡤⠤⢀⣤⢤⣄⢠⡤⠤
@@ -73,8 +71,6 @@ instance Optical IsoTrait where
   cloneOptic (Iso f φ) = iso f φ
   Iso g γ ∘ Iso f φ = Iso (f . g) (γ . φ)
 
-type AnIso s t a b = Optic IsoTrait s t a b
-type Iso s t a b = ∀ c . FromIso c => Optic c s t a b
 
 class Optical c => FromIso c where
   iso :: (s -> a) -> (b -> t) -> c s t a b
@@ -108,8 +104,6 @@ instance Optical LensTrait where
   cloneOptic (Lens f φ) = lens f φ
   Lens g γ ∘ Lens f φ = Lens (f . g) (\s b -> γ s $ φ (g s) b)
 
-type ALens s t a b = Optic LensTrait s t a b
-type Lens s t a b = ∀ c . FromLens c => Optic c s t a b
 
 class FromIso c => FromLens c where
   lens :: (s -> a) -> (s -> b -> t) -> c s t a b
@@ -137,8 +131,6 @@ instance Optical PrismTrait where
   cloneOptic (Prism f φ) = prism f φ
   Prism γ g ∘ Prism φ f = Prism (γ . φ) (g >=> (γ+++id) . f)
 
-type APrism s t a b = Optic PrismTrait s t a b
-type Prism s t a b = ∀ c . FromPrism c => Optic c s t a b
 
 class FromIso c => FromPrism c where
   prism :: (b -> t) -> (s -> Either t a) -> c s t a b
@@ -164,8 +156,6 @@ instance Optical GetterTrait where
   cloneOptic (Getter f) = to f
   Getter g ∘ Getter f = Getter (f . g)
 
-type AGetter s t a b = Optic GetterTrait s t a b
-type Getter s t a b = ∀ c . FromGetter c => Optic c s t a b
 
 class FromLens c => FromGetter c where
   to :: (s -> a) -> c s t a b
@@ -185,8 +175,6 @@ instance Optical ReviewTrait where
   cloneOptic (Review η) = unto η
   Review η ∘ Review θ = Review (η . θ)
 
-type AReview s t a b = Optic ReviewTrait s t a b
-type Review s t a b = ∀ c . FromReview c => Optic c s t a b
 
 class FromPrism c => FromReview c where
   unto :: (b -> t) -> c s t a b
@@ -204,8 +192,6 @@ instance Optical TraversalTrait where
   cloneOptic (Traversal η) = traversed η
   Traversal η ∘ Traversal θ = Traversal (η . θ)
 
-type ATraversal s t a b = Optic TraversalTrait s t a b
-type Traversal s t a b = ∀ c . FromTraversal c => Optic c s t a b
 
 class (FromLens c, FromPrism c) => FromTraversal c where
   traversed :: (∀ f . Applicative f => (a -> f b) -> s -> f t) -> c s t a b
@@ -227,8 +213,6 @@ instance Optical SetterTrait where
   cloneOptic (Setter η) = sets η
   Setter s ∘ Setter σ = Setter $ s . σ
 
-type ASetter s t a b = Optic SetterTrait s t a b
-type Setter s t a b = ∀ c . FromSetter c => Optic c s t a b
 
 class FromTraversal c => FromSetter c where
   sets :: ((a -> b) -> s -> t) -> c s t a b
@@ -246,8 +230,6 @@ instance Optical FoldTrait where
   cloneOptic (Fold η) = folds η
   Fold η ∘ Fold θ = Fold (η . θ)
 
-type AFold s t a b = Optic FoldTrait s t a b
-type Fold s t a b = ∀ c . FromFold c => Optic c s t a b
 
 class (FromTraversal c, FromFold1 c) => FromFold c where
   folds :: (∀ r . (Monoid r, Semigroup r) => (a -> r) -> s -> r) -> c s t a b
@@ -264,8 +246,6 @@ instance Optical Fold1Trait where
   cloneOptic (Fold1 η) = folds1 η
   Fold1 η ∘ Fold1 θ = Fold1 (η . θ)
 
-type AFold1 s t a b = Optic Fold1Trait s t a b
-type Fold1 s t a b = ∀ c . FromFold1 c => Optic c s t a b
 
 class FromLens c => FromFold1 c where
   folds1 :: (∀ r . Semigroup r => (a -> r) -> s -> r) -> c s t a b
