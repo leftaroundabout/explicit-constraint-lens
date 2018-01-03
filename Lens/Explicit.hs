@@ -34,7 +34,7 @@ module Lens.Explicit (
                      -- *** Minimum-length 1
                      , Fold1, AFold1, foldMap1Of
                      -- ** Traversals
-                     , traversed, Traversal, ATraversal, traverseOf, Traversal'
+                     , traversal, traversed, Traversal, ATraversal, traverseOf, Traversal'
                      -- * Composition
                      -- $composInfo
                      , (Cat..), (&)
@@ -198,8 +198,11 @@ traverseOf :: Applicative 𝑓 => ATraversal 𝑠 𝑡 𝑎 𝑏 -> (𝑎 -> �
 traverseOf Ж.Equality = id
 traverseOf (OpticC (Ж.Traversal y)) = y
 
-traversed :: (∀ 𝑓 . Applicative 𝑓 => (𝑎 -> 𝑓 𝑏) -> 𝑠 -> 𝑓 𝑡) -> Traversal 𝑠 𝑡 𝑎 𝑏
-traversed f = OpticC (Ж.traversed f)
+traversal :: (∀ 𝑓 . Applicative 𝑓 => (𝑎 -> 𝑓 𝑏) -> 𝑠 -> 𝑓 𝑡) -> Traversal 𝑠 𝑡 𝑎 𝑏
+traversal f = OpticC (Ж.traversal f)
+
+traversed :: Traversable 𝑡 => Traversal (𝑡 𝑎) (𝑡 𝑏) 𝑎 𝑏
+traversed = traversal traverse
 
 -- | Traversals can 'Fold' over the fields of a data structure, and additionally
 --   reconstruct the structure with modified fields.

@@ -189,18 +189,18 @@ data TraversalTrait s t a b = Traversal (∀ f . Applicative f => (a -> f b) -> 
 
 instance Optical TraversalTrait where
   type OptDens TraversalTrait ζ = FromTraversal ζ
-  cloneOptic (Traversal η) = traversed η
+  cloneOptic (Traversal η) = traversal η
   Traversal η ∘ Traversal θ = Traversal (η . θ)
 
 
 class (FromLens c, FromPrism c) => FromTraversal c where
-  traversed :: (∀ f . Applicative f => (a -> f b) -> s -> f t) -> c s t a b
+  traversal :: (∀ f . Applicative f => (a -> f b) -> s -> f t) -> c s t a b
 instance FromTraversal TraversalTrait where
-  traversed = Traversal
+  traversal = Traversal
 instance FromTraversal SetterTrait where
-  traversed θ = Setter (\f -> runIdentity . θ (Identity . f))
+  traversal θ = Setter (\f -> runIdentity . θ (Identity . f))
 instance FromTraversal FoldTrait where
-  traversed θ = Fold (\t -> getConst . θ (Const . t))
+  traversal θ = Fold (\t -> getConst . θ (Const . t))
 
 
 -- ⣾⣍⠁⢀⡤⢤⡠⣿⠄⢼⡧⣠⠤⣄⢠⣄⡄⣤⠤⠄
