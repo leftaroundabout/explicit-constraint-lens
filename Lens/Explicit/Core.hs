@@ -92,6 +92,8 @@ instance FromIso Fold1Trait where
   iso f _ = Fold1 (\t -> t . f)
 instance FromIso TraversalTrait where
   iso f φ = Traversal (\t -> fmap φ . t . f)
+instance FromIso Traversal1Trait where
+  iso f φ = Traversal1 (\_ t -> fmap φ . t . f)
 
 
 -- ⣿⠀⠀⣠⠤⣄⢠⡤⢤⡀⣤⠤⠄⣠⠤⣄⢠⡤⠤
@@ -113,6 +115,8 @@ instance FromLens LensTrait where
   lens = Lens
 instance FromLens TraversalTrait where
   lens f φ = Traversal (\τ s -> fmap (φ s) . τ $ f s)
+instance FromLens Traversal1Trait where
+  lens f φ = Traversal1 (\_ τ s -> fmap (φ s) . τ $ f s)
 instance FromLens FoldTrait where
   lens f _ = Fold (\τ -> τ . f)
 instance FromLens Fold1Trait where
@@ -193,7 +197,7 @@ instance Optical TraversalTrait where
   Traversal η ∘ Traversal θ = Traversal (η . θ)
 
 
-class (FromLens c, FromPrism c) => FromTraversal c where
+class (FromTraversal1 c, FromPrism c) => FromTraversal c where
   traversal :: (∀ f . Applicative f => (a -> f b) -> s -> f t) -> c s t a b
 instance FromTraversal TraversalTrait where
   traversal = Traversal
@@ -201,6 +205,31 @@ instance FromTraversal SetterTrait where
   traversal θ = Setter (\f -> runIdentity . θ (Identity . f))
 instance FromTraversal FoldTrait where
   traversal θ = Fold (\t -> getConst . θ (Const . t))
+
+data Traversal1Trait s t a b = Traversal1
+      (∀ f . Functor f => (∀ x y . f (x -> y) -> f x -> f y) -> (a -> f b) -> s -> f t)
+
+instance Optical Traversal1Trait where
+  type OptDens Traversal1Trait ζ = FromTraversal1 ζ
+  cloneOptic (Traversal1 η) = traversal1By η
+  Traversal1 η ∘ Traversal1 θ = Traversal1 (\α -> η α . θ α)
+
+
+class (FromLens c) => FromTraversal1 c where
+  traversal1By :: (∀ f . Functor f =>
+                      (∀ x y . f (x -> y) -> f x -> f y) -> (a -> f b) -> s -> f t)
+                    -> c s t a b
+instance FromTraversal1 TraversalTrait where
+  traversal1By θ = Traversal $ θ (<*>)
+instance FromTraversal1 Traversal1Trait where
+  traversal1By = Traversal1
+instance FromTraversal1 SetterTrait where
+  traversal1By θ = Setter (\f -> runIdentity . θ (<*>) (Identity . f))
+instance FromTraversal1 FoldTrait where
+  traversal1By θ = Fold (\t -> getConst . θ (<*>) (Const . t))
+instance FromTraversal1 Fold1Trait where
+  traversal1By θ = Fold1 (\t -> getConst . θ (\(Const m) (Const n) -> Const $ m<>n)
+                                             (Const . t))
 
 
 -- ⣾⣍⠁⢀⡤⢤⡠⣿⠄⢼⡧⣠⠤⣄⢠⣄⡄⣤⠤⠄
@@ -247,7 +276,7 @@ instance Optical Fold1Trait where
   Fold1 η ∘ Fold1 θ = Fold1 (η . θ)
 
 
-class FromLens c => FromFold1 c where
+class FromTraversal1 c => FromFold1 c where
   folds1 :: (∀ r . Semigroup r => (a -> r) -> s -> r) -> c s t a b
 instance FromFold1 FoldTrait where
   folds1 = Fold

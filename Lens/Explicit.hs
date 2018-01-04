@@ -35,14 +35,16 @@ module Lens.Explicit (
                      , Fold1, AFold1, foldMap1Of
                      -- ** Traversals
                      , traversal, traversed, Traversal, ATraversal, traverseOf, Traversal'
+                     -- *** Minimum-length 1 
+                     , traversal1By, Traversal1, ATraversal1, traverse1ByOf, Traversal1'
                      -- * Composition
                      -- $composInfo
                      , (Cat..), (&)
                      -- * Weakening hierarchy
                      , weaken
-                     , Ж.FromIso, Ж.FromLens, Ж.FromPrism, Ж.FromTraversal
+                     , Ж.FromIso, Ж.FromLens, Ж.FromPrism, Ж.FromTraversal1, Ж.FromTraversal
                      , Ж.FromGetter, Ж.FromReview, Ж.FromFold1, Ж.FromFold
-                     , Ж.IsoTrait, Ж.LensTrait, Ж.PrismTrait, Ж.TraversalTrait
+                     , Ж.IsoTrait, Ж.LensTrait, Ж.PrismTrait, Ж.Traversal1Trait, Ж.TraversalTrait
                      , Ж.GetterTrait, Ж.ReviewTrait, Ж.Fold1Trait, Ж.FoldTrait
                      ) where
 
@@ -212,6 +214,24 @@ type Traversal 𝑠 𝑡 𝑎 𝑏 = ∀ c . Ж.FromTraversal c => Ж.Optic c �
 type ATraversal 𝑠 𝑡 𝑎 𝑏 = Ж.Optic Ж.TraversalTrait 𝑠 𝑡 𝑎 𝑏
 
 type Traversal' 𝑠 𝑎 = Traversal 𝑠 𝑠 𝑎 𝑎
+
+
+traverse1ByOf :: Functor 𝑓 => ATraversal1 𝑠 𝑡 𝑎 𝑏 -> (∀ 𝑥 𝑦 . 𝑓 (𝑥->𝑦) -> 𝑓 𝑥 -> 𝑓 𝑦)
+                                              -> (𝑎 -> 𝑓 𝑏) -> 𝑠 -> 𝑓 𝑡
+traverse1ByOf Ж.Equality = const id
+traverse1ByOf (OpticC (Ж.Traversal1 y)) = y
+
+traversal1By :: (∀ 𝑓 . Functor 𝑓 => (∀ 𝑥 𝑦 . 𝑓 (𝑥->𝑦) -> 𝑓 𝑥 -> 𝑓 𝑦)
+                                    -> (𝑎 -> 𝑓 𝑏) -> 𝑠 -> 𝑓 𝑡) -> Traversal1 𝑠 𝑡 𝑎 𝑏
+traversal1By f = OpticC (Ж.traversal1By f)
+
+-- | Like 'Traversal', but always hits at least one element in the structure.
+type Traversal1 𝑠 𝑡 𝑎 𝑏 = ∀ c . Ж.FromTraversal1 c => Ж.Optic c 𝑠 𝑡 𝑎 𝑏
+
+-- | A 'Traversal1' that may also have additional capabilities, e.g. a 'Lens'.
+type ATraversal1 𝑠 𝑡 𝑎 𝑏 = Ж.Optic Ж.Traversal1Trait 𝑠 𝑡 𝑎 𝑏
+
+type Traversal1' 𝑠 𝑎 = Traversal1 𝑠 𝑠 𝑎 𝑎
 
 
 foldMapOf :: (Monoid 𝑟, Semigroup 𝑟) => AFold 𝑠 𝑡 𝑎 𝑏 -> (𝑎 -> 𝑟) -> 𝑠 -> 𝑟
