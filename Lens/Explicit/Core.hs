@@ -167,6 +167,8 @@ instance FromGetter GetterTrait where
   to = Getter
 instance FromGetter FoldTrait where
   to f = Fold (\t -> t . f)
+instance FromGetter Fold1Trait where
+  to f = Fold1 (\t -> t . f)
 
 
 -- ⣿⢉⡷⢀⡤⢤⡠⣄⠀⡤⢨⡅⣠⠤⣄⢠⡄⢠⡄⡠⢠⡤⠤
@@ -260,7 +262,7 @@ instance Optical FoldTrait where
   Fold η ∘ Fold θ = Fold (η . θ)
 
 
-class (FromTraversal c, FromFold1 c) => FromFold c where
+class (FromTraversal c, FromFold1 c, FromGetter c) => FromFold c where
   folds :: (∀ r . (Monoid r, Semigroup r) => (a -> r) -> s -> r) -> c s t a b
   folded :: Foldable f => c (f a) t a b
   folded = folds foldMap
@@ -276,7 +278,7 @@ instance Optical Fold1Trait where
   Fold1 η ∘ Fold1 θ = Fold1 (η . θ)
 
 
-class FromTraversal1 c => FromFold1 c where
+class (FromTraversal1 c, FromGetter c) => FromFold1 c where
   folds1 :: (∀ r . Semigroup r => (a -> r) -> s -> r) -> c s t a b
 instance FromFold1 FoldTrait where
   folds1 = Fold
