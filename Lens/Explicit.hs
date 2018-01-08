@@ -12,6 +12,8 @@
 {-# LANGUAGE GADTs           #-}
 {-# LANGUAGE UnicodeSyntax   #-}
 
+{-# LANGUAGE Safe #-}
+
 
 module Lens.Explicit (
                      -- * Lenses and other optics

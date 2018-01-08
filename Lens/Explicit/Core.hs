@@ -17,6 +17,8 @@
 {-# LANGUAGE FlexibleContexts             #-}
 {-# LANGUAGE EmptyCase                    #-}
 
+{-# LANGUAGE Trustworthy #-}
+
 module Lens.Explicit.Core where
     
 import Prelude hiding (id, (.))
